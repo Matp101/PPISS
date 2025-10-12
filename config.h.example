@@ -1,0 +1,19 @@
+/*
+ * Configuration file for PPISS
+ * 
+ * INSTRUCTIONS:
+ * 1. Copy this file to config.h
+ * 2. Update the WiFi credentials below with your network information
+ * 3. Save the file
+ * 
+ * NOTE: config.h is in .gitignore to prevent accidentally committing credentials
+ */
+
+#ifndef CONFIG_H
+#define CONFIG_H
+
+// WiFi credentials
+const char* WIFI_SSID = "YOUR_WIFI_SSID";
+const char* WIFI_PASSWORD = "YOUR_WIFI_PASSWORD";
+
+#endif

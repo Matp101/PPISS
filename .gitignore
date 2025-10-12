@@ -1,0 +1,16 @@
+# Don't commit WiFi credentials
+config.h
+
+# Arduino build files
+build/
+*.hex
+*.bin
+*.elf
+*.map
+
+# IDE files
+.vscode/
+.DS_Store
+*.swp
+*.swo
+*~
