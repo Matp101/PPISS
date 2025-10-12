@@ -7,11 +7,31 @@ Display the ISS Urine Tank Quantity on a GC9A01 round TFT display using an ESP82
 ![Arduino](https://img.shields.io/badge/Arduino-Compatible-green)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 
+---
+
+## 🎯 Start Here
+
+**New to this project?** Follow this path:
+
+1. 📖 **[QUICKSTART.md](QUICKSTART.md)** - Get running in 10 minutes!
+2. 🔧 **[TFT_eSPI_SETUP.md](TFT_eSPI_SETUP.md)** - Configure your display
+3. ❓ **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - Having issues? Check here
+4. 📚 Read the sections below for details
+
+---
+
 ## 🚀 Quick Links
 
-- **[Quick Start Guide](QUICKSTART.md)** - Get running in 10 minutes!
-- **[TFT_eSPI Setup](TFT_eSPI_SETUP.md)** - Display configuration guide
-- **[Library Details](LIBRARIES.md)** - Complete library information
+| Document | Purpose | When to Use |
+|----------|---------|-------------|
+| **[QUICKSTART.md](QUICKSTART.md)** | Step-by-step setup guide | First time setup |
+| **[TFT_eSPI_SETUP.md](TFT_eSPI_SETUP.md)** | Display library configuration | Before uploading code |
+| **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** | Problem diagnosis | When something doesn't work |
+| **[LIBRARIES.md](LIBRARIES.md)** | Library installation details | Library issues |
+| **[FILE_STRUCTURE.md](FILE_STRUCTURE.md)** | Explains all project files | Understanding the project |
+| **[API_INTEGRATION.md](API_INTEGRATION.md)** | How to add real ISS data | Future development |
+
+---
 
 ## 📺 Project Overview
 
@@ -154,7 +174,7 @@ Potential sources for ISS data:
 ## 🎨 Customization
 
 ### Change Update Interval
-Edit the `UPDATE_INTERVAL` constant in `PPISS.ino`:
+Edit the `UPDATE_INTERVAL` constant in `PPISS_TFT_eSPI.ino`:
 ```cpp
 const unsigned long UPDATE_INTERVAL = 60000; // milliseconds (60000 = 1 minute)
 ```
@@ -163,43 +183,56 @@ const unsigned long UPDATE_INTERVAL = 60000; // milliseconds (60000 = 1 minute)
 If your wiring is different, update the pin definitions:
 ```cpp
 #define TFT_DC    D4   // Data/Command pin
-#define TFT_CS    D8   // Chip Select pin
+#define TFT_CS    D8   // Chip select pin
 #define TFT_RST   D3   // Reset pin
 ```
 
+See [QUICKSTART.md](QUICKSTART.md) for the wiring diagram.
+
 ### Modify Display Colors
-Colors are defined in RGB565 format (16-bit). Common colors:
-- `0x0000` - Black
-- `0xFFFF` - White
-- `0xF800` - Red
-- `0x07E0` - Green
-- `0x001F` - Blue
-- `0x07FF` - Cyan
-- `0xFFE0` - Yellow
+Colors are defined in RGB565 format (16-bit) when using TFT_eSPI. Common colors:
+- `TFT_BLACK` - Black
+- `TFT_WHITE` - White
+- `TFT_RED` - Red
+- `TFT_GREEN` - Green
+- `TFT_BLUE` - Blue
+- `TFT_CYAN` - Cyan
+- `TFT_YELLOW` - Yellow
+
+### Add Real ISS Data
+See **[API_INTEGRATION.md](API_INTEGRATION.md)** for detailed instructions on integrating real ISS APIs.
 
 ## 🔧 Troubleshooting
 
 ### Display shows nothing
-- Check wiring connections (see [QUICKSTART.md](QUICKSTART.md) for wiring diagram)
-- Verify power supply (3.3V)
-- Run `HardwareTest.ino` to verify hardware
-- Ensure TFT_eSPI library is correctly configured (see [TFT_eSPI_SETUP.md](TFT_eSPI_SETUP.md))
+- Check wiring connections (see **[QUICKSTART.md](QUICKSTART.md)** for wiring diagram)
+- Verify power supply (3.3V, NOT 5V!)
+- Run `HardwareTest.ino` to verify hardware works
+- Ensure TFT_eSPI library is correctly configured (see **[TFT_eSPI_SETUP.md](TFT_eSPI_SETUP.md)**)
 - Try adjusting display rotation in code
+- See **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** for systematic debugging
 
 ### WiFi connection fails
 - Verify WiFi credentials in `config.h`
 - Check if your WiFi network is 2.4GHz (ESP8266 doesn't support 5GHz)
 - Ensure the ESP8266 is within range of your router
+- No MAC address filtering on your router
+- See **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** WiFi section
 
 ### Data not updating
 - Check Serial Monitor for error messages
 - Verify internet connectivity
 - Ensure the API endpoint is accessible
+- See **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** data section
 
 ### Compilation errors
-- Make sure all required libraries are installed
+- Make sure all required libraries are installed (see **[LIBRARIES.md](LIBRARIES.md)**)
 - Verify ESP8266 board package is up to date
 - Check that you've created `config.h` from `config.h.example`
+- See **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** compilation section
+
+### More help needed?
+See the comprehensive **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** checklist!
 
 ## 🤝 Contributing
 
@@ -229,15 +262,26 @@ This project is open source and available under the MIT License.
 
 🚧 **Work in Progress** - This project currently uses mock data for demonstration. Integration with actual ISS telemetry APIs is needed for real urine tank percentage data.
 
-### Roadmap
-- [x] Basic hardware setup and display driver
-- [x] WiFi connectivity
-- [x] Mock data display
-- [x] Comprehensive documentation
-- [ ] Real ISS API integration
+### What Works Now ✅
+- ✅ Complete hardware setup and wiring
+- ✅ ESP8266 WiFi connectivity
+- ✅ GC9A01 display driver and rendering
+- ✅ Mock data display (demonstrates functionality)
+- ✅ Comprehensive documentation
+- ✅ Hardware test utilities
+- ✅ Error handling and display
+
+### Future Enhancements 🚀
+- [ ] Real ISS API integration (see **[API_INTEGRATION.md](API_INTEGRATION.md)**)
 - [ ] Web configuration interface
 - [ ] OTA (Over-The-Air) updates
-- [ ] Multiple data views
+- [ ] Multiple data views (water, oxygen, etc.)
+- [ ] Historical data graphing
+- [ ] Power saving modes
+- [ ] Sound alerts
+
+### How to Contribute
+See **[API_INTEGRATION.md](API_INTEGRATION.md)** if you have access to real ISS telemetry APIs!
 
 ## 📞 Support & Community
 
