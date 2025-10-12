@@ -21,8 +21,6 @@ extern "C" {
 /* UI task entry */
 void ui_task(void *param);
 
-#define GC9A01_ENABLE_HSPI 1
-
 #ifdef __cplusplus
 }
 #endif

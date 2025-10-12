@@ -20,10 +20,10 @@
  */
 
 #include "gc9a01.h"
+#include "gc9a01_common.h"
 
 #if !GC9A01_ENABLE_HSPI
 
-#include "gc9a01_common.h"
 
 /* -------------------- GC9A01 command bytes we use -------------------- */
 typedef enum {

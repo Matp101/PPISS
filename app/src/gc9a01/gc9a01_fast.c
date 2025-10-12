@@ -1,8 +1,8 @@
 #include "gc9a01.h"
+#include "gc9a01_common.h"
 
 #ifdef GC9A01_ENABLE_HSPI
 
-#include "gc9a01_common.h"
 
 #include "gpio.h"
 #include "spi_interface.h"
@@ -35,7 +35,7 @@ static inline void dc_high(void){ GPIO_REG_WRITE(GPIO_OUT_W1TS_ADDRESS, 1U << PI
 static void hspi_init(void)
 {
     LOG("mux HSPI pins");
-    
+
     // Route the JTAG/HSPI pad set to HSPI
     PIN_FUNC_SELECT(PERIPHS_IO_MUX_MTCK_U, FUNC_HSPID);    // GPIO13 MOSI
     PIN_FUNC_SELECT(PERIPHS_IO_MUX_MTMS_U, FUNC_HSPI_CLK); // GPIO14 SCLK
