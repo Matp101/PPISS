@@ -1,0 +1,12 @@
+{
+    "files.associations": {
+        "ets_sys.h": "c",
+        "c_types.h": "c",
+        "task.h": "c",
+        "esp_sta.h": "c",
+        "esp_wifi.h": "c",
+        "esp_system.h": "c",
+        "pin_mux_register.h": "c",
+        "freertos.h": "c"
+    }
+}

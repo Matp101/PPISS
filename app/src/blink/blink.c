@@ -1,8 +1,8 @@
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
+#include "blink.h"
 
 #include "esp8266/pin_mux_register.h"
 #include "gpio.h"
+
 
 #define LED_GPIO 2
 
@@ -15,7 +15,7 @@ static void led_init() {
     led_off();
 }
 
-static void blink_task(void *arg) {
+void blink_task(void *arg) {
     (void)arg;
 
     led_init();
