@@ -1,16 +1,30 @@
 # PPISS
-Pee Percentage of the International Space Station
+**P**ee **P**ercentage of the **I**nternational **S**pace **S**tation
 
 Display the ISS Urine Tank Quantity on a GC9A01 round TFT display using an ESP8266 Wemos D1 Mini.
 
 ![PPISS Project](https://img.shields.io/badge/ESP8266-Compatible-blue)
 ![Arduino](https://img.shields.io/badge/Arduino-Compatible-green)
+![License](https://img.shields.io/badge/License-MIT-yellow)
 
-## Hardware Requirements
+## 🚀 Quick Links
 
-- **ESP8266 Wemos D1 Mini** - WiFi-enabled microcontroller
-- **GC9A01 1.28" TFT Display (240x240)** - Round LCD display
+- **[Quick Start Guide](QUICKSTART.md)** - Get running in 10 minutes!
+- **[TFT_eSPI Setup](TFT_eSPI_SETUP.md)** - Display configuration guide
+- **[Library Details](LIBRARIES.md)** - Complete library information
+
+## 📺 Project Overview
+
+This project connects an ESP8266 microcontroller to the internet to fetch and display ISS (International Space Station) telemetry data on a beautiful round TFT display. Specifically, it shows the urine tank fill percentage - a fun and educational way to learn about IoT and the ISS!
+
+## 🛠️ Hardware Requirements
+
+- **ESP8266 Wemos D1 Mini** - WiFi-enabled microcontroller (~$4)
+- **GC9A01 1.28" TFT Display (240x240)** - Round LCD display (~$8)
 - **Connecting wires** - For wiring the display to the ESP8266
+- **USB cable** - For programming and power
+
+**Total cost: ~$12-15**
 
 ## Wiring Diagram
 
@@ -57,17 +71,18 @@ Install the following libraries via `Tools > Manage Libraries` in Arduino IDE:
 1. **ESP8266WiFi** (included with ESP8266 board package)
 2. **ESP8266HTTPClient** (included with ESP8266 board package)
 3. **ArduinoJson** by Benoit Blanchon (version 6.x)
-   - Search for "ArduinoJson" in Library Manager
-4. **Adafruit GFX Library** by Adafruit
-   - Search for "Adafruit GFX" in Library Manager
-5. **Arduino_GC9A01** or equivalent GC9A01 driver
-   - You may need to install this manually from GitHub:
-   - [Arduino_GC9A01](https://github.com/moononournation/Arduino_GFX) (part of Arduino_GFX library)
-   - Alternative: Search for "GC9A01" in Library Manager
+4. **TFT_eSPI** by Bodmer ⭐ **RECOMMENDED** - [Configuration Guide](TFT_eSPI_SETUP.md)
 
-**Note:** If you can't find Arduino_GC9A01, you can use the more comprehensive **Arduino_GFX** library by moononournation, which includes GC9A01 support.
+Alternative display library:
+5. **Arduino_GFX** by moononournation (if you prefer not to use TFT_eSPI)
 
-## Installation & Configuration
+> 💡 **Tip:** Use `PPISS_TFT_eSPI.ino` (with TFT_eSPI library) for the easiest setup!
+
+See [LIBRARIES.md](LIBRARIES.md) for detailed installation instructions.
+
+## 📦 Installation & Configuration
+
+> 📖 **New to this?** Start with the [Quick Start Guide](QUICKSTART.md)!
 
 1. **Clone or download this repository**
    ```bash
@@ -86,26 +101,37 @@ Install the following libraries via `Tools > Manage Libraries` in Arduino IDE:
      const char* WIFI_PASSWORD = "YourWiFiPassword";
      ```
 
-3. **Upload the Sketch**
+3. **Configure TFT_eSPI Library** (if using TFT_eSPI)
+   - See detailed guide: [TFT_eSPI_SETUP.md](TFT_eSPI_SETUP.md)
+   - Quick version: Edit `User_Setup.h` in TFT_eSPI library folder
+
+4. **Test Your Hardware** (Optional but recommended)
+   - Upload `HardwareTest.ino` to verify display works
+   - Should see colorful graphics and "Test OK!" message
+
+5. **Upload the Main Sketch**
    - Connect your Wemos D1 Mini to your computer via USB
-   - Open `PPISS.ino` in Arduino IDE
+   - Open `PPISS_TFT_eSPI.ino` in Arduino IDE (recommended)
+     - OR `PPISS.ino` if using Arduino_GFX library
    - Select the correct board: `Tools > Board > LOLIN(WEMOS) D1 R2 & mini`
    - Select the correct port: `Tools > Port > [Your COM port]`
    - Click the Upload button (→)
 
-4. **Monitor Serial Output** (Optional but recommended for debugging)
+6. **Monitor Serial Output** (Optional but recommended for debugging)
    - Open Serial Monitor: `Tools > Serial Monitor`
    - Set baud rate to `115200`
    - You should see connection status and data updates
 
-## Features
+## ✨ Features
 
 - ✅ WiFi connectivity with status indicator
 - ✅ Automatic data fetching from ISS API
-- ✅ Visual percentage display on round TFT
+- ✅ Visual percentage display on round TFT with color coding
 - ✅ Update interval: 1 minute (configurable)
 - ✅ Error handling and display
 - ✅ Low power consumption during idle
+- ✅ Serial debugging output
+- ✅ Hardware test sketch included
 
 ## API Information
 
@@ -125,7 +151,7 @@ Potential sources for ISS data:
 - [ISS Mimic API](https://iss-mimic.github.io/Mimic/)
 - [Lightstreamer ISS Live](https://www.lightstreamer.com/demos/iss-live/)
 
-## Customization
+## 🎨 Customization
 
 ### Change Update Interval
 Edit the `UPDATE_INTERVAL` constant in `PPISS.ino`:
@@ -151,13 +177,14 @@ Colors are defined in RGB565 format (16-bit). Common colors:
 - `0x07FF` - Cyan
 - `0xFFE0` - Yellow
 
-## Troubleshooting
+## 🔧 Troubleshooting
 
 ### Display shows nothing
-- Check wiring connections
+- Check wiring connections (see [QUICKSTART.md](QUICKSTART.md) for wiring diagram)
 - Verify power supply (3.3V)
-- Ensure GC9A01 library is correctly installed
-- Try adjusting display rotation in `initDisplay()`
+- Run `HardwareTest.ino` to verify hardware
+- Ensure TFT_eSPI library is correctly configured (see [TFT_eSPI_SETUP.md](TFT_eSPI_SETUP.md))
+- Try adjusting display rotation in code
 
 ### WiFi connection fails
 - Verify WiFi credentials in `config.h`
@@ -174,21 +201,50 @@ Colors are defined in RGB565 format (16-bit). Common colors:
 - Verify ESP8266 board package is up to date
 - Check that you've created `config.h` from `config.h.example`
 
-## Contributing
+## 🤝 Contributing
 
 Feel free to submit issues, fork the repository, and create pull requests for any improvements.
 
-## License
+### Ideas for Contributions
+- Integration with real ISS telemetry APIs
+- Additional ISS data displays (water tank, oxygen levels, etc.)
+- Power saving modes
+- Web interface for configuration
+- Multiple display modes
+- Historical data graphing
+
+## 📄 License
 
 This project is open source and available under the MIT License.
 
-## Acknowledgments
+## 🙏 Acknowledgments
 
 - NASA for ISS data and inspiration
 - ESP8266 Community for the excellent board support
+- Bodmer for the TFT_eSPI library
 - Adafruit for the GFX library
 - The Arduino community
 
-## Project Status
+## 📊 Project Status
 
-🚧 **Work in Progress** - This project currently uses mock data. Integration with actual ISS telemetry APIs is needed for real urine tank percentage data.
+🚧 **Work in Progress** - This project currently uses mock data for demonstration. Integration with actual ISS telemetry APIs is needed for real urine tank percentage data.
+
+### Roadmap
+- [x] Basic hardware setup and display driver
+- [x] WiFi connectivity
+- [x] Mock data display
+- [x] Comprehensive documentation
+- [ ] Real ISS API integration
+- [ ] Web configuration interface
+- [ ] OTA (Over-The-Air) updates
+- [ ] Multiple data views
+
+## 📞 Support & Community
+
+- **Issues:** Report bugs or request features via [GitHub Issues](https://github.com/Matp101/PPISS/issues)
+- **Documentation:** Check the guides in this repository
+- **Hardware Questions:** See [QUICKSTART.md](QUICKSTART.md) and [TFT_eSPI_SETUP.md](TFT_eSPI_SETUP.md)
+
+---
+
+**Made with ❤️ for space enthusiasts and IoT learners**
