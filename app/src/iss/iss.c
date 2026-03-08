@@ -46,17 +46,23 @@
  */
 volatile telem_item_t g_telem[] = {
     {
-        .id = "NODE3000005", .label = "Poo", .label2 = NULL,
+        .id = "NODE3000005", .label = "Urine", .label2 = "Tank",
+        .value = "", .valid = false,
+        .image = NULL, .img_w = 0, .img_h = 0,
+        .idx_img = tank_pixels, .idx_pal = tank_palette,
+        .idx_w = TANK_IMG_W, .idx_h = TANK_IMG_H, .idx_scale = 2,
+    },
+    {
+        .id = "NODE3000008", .label = "Waste", .label2 = "Water Tank",
         .value = "", .valid = false,
         .image = NULL, .img_w = 0, .img_h = 0,
         .idx_img = NULL, .idx_pal = NULL, .idx_w = 0, .idx_h = 0, .idx_scale = 0,
     },
     {
-        .id = "NODE3000008", .label = "Urine", .label2 = "Tank",
+        .id = "NODE3000009", .label = "Clean", .label2 = "Water Tank",
         .value = "", .valid = false,
         .image = NULL, .img_w = 0, .img_h = 0,
-        .idx_img = tank_pixels, .idx_pal = tank_palette,
-        .idx_w = TANK_IMG_W, .idx_h = TANK_IMG_H, .idx_scale = 2,
+        .idx_img = NULL, .idx_pal = NULL, .idx_w = 0, .idx_h = 0, .idx_scale = 0,
     },
 };
 const int TELEM_COUNT = sizeof(g_telem) / sizeof(g_telem[0]);
