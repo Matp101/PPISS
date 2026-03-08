@@ -22,8 +22,8 @@ void blink_task(void *arg) {
 
     for (;;) {
         led_on();
-        vTaskDelay(250 / portTICK_RATE_MS);
+        vTaskDelay(50 / portTICK_RATE_MS);
         led_off();
-        vTaskDelay(250 / portTICK_RATE_MS);
+        vTaskDelay(1950 / portTICK_RATE_MS);
     }
 }
