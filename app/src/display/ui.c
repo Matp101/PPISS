@@ -86,7 +86,7 @@ void ui_task(void *param)
                                      COLOR_GREEN, COLOR_BLACK);
                 if (item->label2) {
                     draw_string_centered(40 + 7 * 3 + 4, (const char *)item->label2, 3,
-                                         COLOR_LIGHTGREY, COLOR_BLACK);
+                                         COLOR_GREEN, COLOR_BLACK);
                 }
             }
         }
