@@ -1,58 +1,26 @@
 /*
- * GC9A01 240x240 round TFT — Minimal bring-up on ESP8266 RTOS-SDK (Wemos D1 mini)
+ * GC9A01 240x240 round TFT driver — ESP8266 RTOS-SDK (Wemos D1 mini)
  * Transport: bit-banged SPI (MODE0, MSB-first)
- *
- * Why bit-bang? It's bullet-proof for bring-up. Once this is solid on your wiring,
- * you can swap to HSPI for speed.
  *
  * Wiring (D1 mini):
  *   MOSI  -> D7  (GPIO13)
  *   SCLK  -> D5  (GPIO14)
  *   DC    -> D2  (GPIO4)
  *   CS    -> D8  (GPIO15)
- *   MISO  -> D6  (GPIO12)  [unused by display]
- *   BL    -> (often tied to VCC; optional PWM if your module exposes BL)
- *
- * Notes:
- *  - This uses the “Adafruit” GC9A01 init table (trimmed).
- *  - If your module’s backlight (BL) is permanently tied high, brightness
- *    control won’t work — that’s normal for many GC9A01 boards.
+ *   BL    -> tied to VCC (or optional PWM)
  */
 
 #include "gc9a01.h"
 #include "gc9a01_common.h"
 
-#if !GC9A01_ENABLE_HSPI
-
-
-/* -------------------- GC9A01 command bytes we use -------------------- */
-typedef enum {
-    GC9_SWRESET = 0x01,
-    GC9_SLPOUT  = 0x11,
-    GC9_DISPON  = 0x29,
-    GC9_INVON   = 0x21,
-    GC9_TEON    = 0x35,
-    GC9_MADCTL  = 0x36,
-    GC9_COLMOD  = 0x3A,
-    GC9_CASET   = 0x2A,
-    GC9_RASET   = 0x2B,
-    GC9_RAMWR   = 0x2C
-} Gc9Cmd;
-
-/* MADCTL bits */
-enum {
-    MADCTL_MY  = 0x80,
-    MADCTL_MX  = 0x40,
-    MADCTL_MV  = 0x20,
-    MADCTL_BGR = 0x08
-};
+#define LOG(fmt, ...) os_printf("[GC9A01] " fmt "\r\n", ##__VA_ARGS__)
 
 /* -------------------- GPIO helpers -------------------- */
 static inline void gpio_out_set(uint32_t pin) { GPIO_REG_WRITE(GPIO_OUT_W1TS_ADDRESS, 1U << pin); }
 static inline void gpio_out_clr(uint32_t pin) { GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, 1U << pin); }
 
-static inline void cs_high(void)  { gpio_out_set(PIN_CS);   }
-static inline void cs_low(void)   { gpio_out_clr(PIN_CS);   }
+static inline void cs_high(void)   { gpio_out_set(PIN_CS);   }
+static inline void cs_low(void)    { gpio_out_clr(PIN_CS);   }
 static inline void dc_high(void)   { gpio_out_set(PIN_DC);   }
 static inline void dc_low(void)    { gpio_out_clr(PIN_DC);   }
 static inline void mosi_high(void) { gpio_out_set(PIN_MOSI); }
@@ -60,7 +28,7 @@ static inline void mosi_low(void)  { gpio_out_clr(PIN_MOSI); }
 static inline void clk_high(void)  { gpio_out_set(PIN_SCLK); }
 static inline void clk_low(void)   { gpio_out_clr(PIN_SCLK); }
 
-/* Small delay to respect setup/hold on edges (tweak if needed) */
+/* Small delay to respect setup/hold on edges */
 static inline void spi_delay(void) { __asm__ __volatile__("nop;nop;nop;nop"); }
 
 /* -------------------- Bit-banged SPI (MODE0, MSB-first) -------------------- */
@@ -75,16 +43,11 @@ static void spi_write_byte(uint8_t b)
     }
 }
 
-static void spi_write_bytes(const uint8_t *buf, uint32_t len)
-{
-    while (len--) spi_write_byte(*buf++);
-}
-
 /* -------------------- Command/Data wrappers -------------------- */
 static void wr_cmd(uint8_t c)
 {
     cs_low();
-    dc_low();                 // Command
+    dc_low();
     spi_write_byte(c);
     cs_high();
 }
@@ -92,72 +55,67 @@ static void wr_cmd(uint8_t c)
 static void wr_dat8(uint8_t d)
 {
     cs_low();
-    dc_high();                // Data
+    dc_high();
     spi_write_byte(d);
     cs_high();
 }
 
-static void wr_dat16(uint16_t v_be)
+static void wr_dat16(uint16_t v)
 {
-    // GC9 expects 16-bit pixels MSB-first (big-endian)
     cs_low();
     dc_high();
-    spi_write_byte((uint8_t)(v_be >> 8));
-    spi_write_byte((uint8_t)(v_be & 0xFF));
+    spi_write_byte((uint8_t)(v >> 8));
+    spi_write_byte((uint8_t)(v & 0xFF));
     cs_high();
 }
 
-/* -------------------- Address window + solid fill -------------------- */
+/* -------------------- Address window -------------------- */
 static void set_addr_window(uint16_t x, uint16_t y, uint16_t w, uint16_t h)
 {
     const uint16_t x2 = x + w - 1;
     const uint16_t y2 = y + h - 1;
 
-    wr_cmd(GC9_CASET);  // Column range
+    wr_cmd(GC9A01A_CASET);
     wr_dat16(x);
     wr_dat16(x2);
 
-    wr_cmd(GC9_RASET);  // Row range
+    wr_cmd(GC9A01A_RASET);
     wr_dat16(y);
     wr_dat16(y2);
 
-    wr_cmd(GC9_RAMWR);  // Write to RAM
+    wr_cmd(GC9A01A_RAMWR);
 }
 
-static void fill_screen(Color565 color)
+/* -------------------- Fill screen -------------------- */
+static void fill_screen(uint16_t color)
 {
     set_addr_window(0, 0, TFT_W, TFT_H);
 
-    // Stream all pixels in one go, CS low while sending
     cs_low();
     dc_high();
-
     for (uint32_t i = 0; i < (uint32_t)TFT_W * TFT_H; ++i) {
         spi_write_byte((uint8_t)(color >> 8));
         spi_write_byte((uint8_t)(color & 0xFF));
     }
-
     cs_high();
 }
 
-/* -------------------- GC9A01 init (trimmed Adafruit sequence) -------------------- */
+/* -------------------- GC9A01 init (Adafruit sequence) -------------------- */
 static void gc9a01_init(void)
 {
     LOG("GC9A01 init");
 
-    // Software reset (if no dedicated RST pin)
-    wr_cmd(GC9_SWRESET);
+    wr_cmd(GC9A01A_SWRESET);
     ets_delay_us(150000);
 
-    // Same order/values Adafruit uses (some vendor-private regs are undocumented)
     const uint8_t seq[] = {
         0xEF, 0,   0xEB, 1, 0x14, 0xFE, 0,   0xEF, 0,   0xEB, 1, 0x14,
         0x84,1,0x40, 0x85,1,0xFF, 0x86,1,0xFF, 0x87,1,0xFF,
         0x88,1,0x0A, 0x89,1,0x21, 0x8A,1,0x00, 0x8B,1,0x80, 0x8C,1,0x01,
         0x8D,1,0x01, 0x8E,1,0xFF, 0x8F,1,0xFF,
         0xB6,2,0x00,0x00,
-        GC9_MADCTL,1,(MADCTL_MX | MADCTL_BGR),   // Landscape-ish, BGR order
-        GC9_COLMOD,1,0x05,                       // 16bpp (RGB565)
+        GC9A01A_MADCTL,1,(MADCTL_MX | MADCTL_BGR),
+        GC9A01A_COLMOD,1,0x05,
         0x90,4,0x08,0x08,0x08,0x08,
         0xBD,1,0x06, 0xBC,1,0x00, 0xFF,3,0x60,0x01,0x04,
         0xC3,1,0x13, 0xC4,1,0x13, 0xC9,1,0x22, 0xBE,1,0x11,
@@ -175,8 +133,8 @@ static void gc9a01_init(void)
         0x67,10,0x00,0x3C,0x00,0x00,0x00,0x01,0x54,0x10,0x32,0x98,
         0x74,7,0x10,0x85,0x80,0x00,0x00,0x4E,0x00,
         0x98,2,0x3E,0x07,
-        GC9_TEON,0,
-        GC9_INVON,0
+        GC9A01A_TEON,0,
+        GC9A01A_INVON,0
     };
 
     const uint8_t *p = seq;
@@ -187,55 +145,110 @@ static void gc9a01_init(void)
         for (uint8_t i = 0; i < n; ++i) wr_dat8(*p++);
     }
 
-    wr_cmd(GC9_SLPOUT);                 // Exit sleep
-    vTaskDelay(150 / portTICK_RATE_MS); // datasheet-ish delay
-    wr_cmd(GC9_DISPON);                 // Display on
+    wr_cmd(GC9A01A_SLPOUT);
+    vTaskDelay(150 / portTICK_RATE_MS);
+    wr_cmd(GC9A01A_DISPON);
     vTaskDelay(20 / portTICK_RATE_MS);
+
+    LOG("GC9A01 init done");
 }
 
 /* -------------------- GPIO & pin mux setup -------------------- */
 static void gpio_init(void)
 {
-    // Route pins to GPIO function (the MT* pins default to JTAG/SPI functions)
     PIN_FUNC_SELECT(PERIPHS_IO_MUX_MTDO_U, FUNC_GPIO15); // CS
     PIN_FUNC_SELECT(PERIPHS_IO_MUX_MTCK_U, FUNC_GPIO13); // MOSI
     PIN_FUNC_SELECT(PERIPHS_IO_MUX_MTMS_U, FUNC_GPIO14); // SCLK
-    // DC (GPIO4) is already a GPIO
 
-    // Enable as outputs: CS, DC, MOSI, SCLK
     GPIO_REG_WRITE(GPIO_ENABLE_W1TS_ADDRESS,
                    (1U << PIN_CS) | (1U << PIN_DC) | (1U << PIN_MOSI) | (1U << PIN_SCLK));
 
-    // Idle levels (MODE0): CS=H, CLK=L, MOSI=L, DC=H
     cs_high();
     clk_low();
     mosi_low();
     dc_high();
 }
 
+/* -------------------- 5x7 bitmap font for digits 0-9 -------------------- */
+static const uint8_t font5x7_digits[10][7] = {
+    { 0x0E, 0x11, 0x13, 0x15, 0x19, 0x11, 0x0E }, // 0
+    { 0x04, 0x0C, 0x04, 0x04, 0x04, 0x04, 0x0E }, // 1
+    { 0x0E, 0x11, 0x01, 0x02, 0x04, 0x08, 0x1F }, // 2
+    { 0x0E, 0x11, 0x01, 0x06, 0x01, 0x11, 0x0E }, // 3
+    { 0x02, 0x06, 0x0A, 0x12, 0x1F, 0x02, 0x02 }, // 4
+    { 0x1F, 0x10, 0x1E, 0x01, 0x01, 0x11, 0x0E }, // 5
+    { 0x06, 0x08, 0x10, 0x1E, 0x11, 0x11, 0x0E }, // 6
+    { 0x1F, 0x01, 0x02, 0x04, 0x08, 0x08, 0x08 }, // 7
+    { 0x0E, 0x11, 0x11, 0x0E, 0x11, 0x11, 0x0E }, // 8
+    { 0x0E, 0x11, 0x11, 0x0F, 0x01, 0x02, 0x0C }, // 9
+};
+
+/* Draw a single digit at (x,y) with scale factor.
+   Each font pixel becomes scale x scale display pixels. */
+static void draw_digit(uint16_t x, uint16_t y, uint8_t digit, uint8_t scale,
+                        uint16_t fg, uint16_t bg)
+{
+    if (digit > 9) return;
+    const uint8_t *glyph = font5x7_digits[digit];
+
+    for (uint8_t row = 0; row < 7; ++row) {
+        for (uint8_t col = 0; col < 5; ++col) {
+            uint16_t color = (glyph[row] & (0x10 >> col)) ? fg : bg;
+            set_addr_window(x + col * scale, y + row * scale, scale, scale);
+            cs_low();
+            dc_high();
+            for (uint8_t sy = 0; sy < scale; ++sy) {
+                for (uint8_t sx = 0; sx < scale; ++sx) {
+                    spi_write_byte((uint8_t)(color >> 8));
+                    spi_write_byte((uint8_t)(color & 0xFF));
+                }
+            }
+            cs_high();
+        }
+    }
+}
+
+/* Draw an integer centred on the 240x240 display. */
+static void draw_number(int32_t num, uint8_t scale, uint16_t fg, uint16_t bg)
+{
+    char buf[12];
+    int len = snprintf(buf, sizeof(buf), "%ld", (long)num);
+    if (len <= 0) return;
+
+    uint16_t char_w = 5 * scale;
+    uint16_t gap    = scale;
+    uint16_t total_w = (uint16_t)(len * char_w + (len - 1) * gap);
+    uint16_t total_h = 7 * scale;
+
+    uint16_t x0 = (TFT_W > total_w) ? (TFT_W - total_w) / 2 : 0;
+    uint16_t y0 = (TFT_H > total_h) ? (TFT_H - total_h) / 2 : 0;
+
+    for (int i = 0; i < len; ++i) {
+        char c = buf[i];
+        if (c >= '0' && c <= '9') {
+            draw_digit(x0, y0, (uint8_t)(c - '0'), scale, fg, bg);
+        }
+        x0 += char_w + gap;
+    }
+}
+
 /* -------------------- UI task entry -------------------- */
 void ui_task(void *param)
 {
     (void)param;
-    LOG("ui_task start (bit-banged SPI)");
+    LOG("ui_task start");
 
     gpio_init();
     gc9a01_init();
 
-    // Simple smoke loop: solid RED -> GREEN -> BLUE
+    LOG("fill_screen BLACK");
+    fill_screen(GC9A01A_BLACK);
+
+    LOG("draw_number 99");
+    draw_number(99, 8, GC9A01A_WHITE, GC9A01A_BLACK);
+    LOG("draw_number done");
+
     for (;;) {
-        LOG("fill RED");
-        fill_screen(COLOR_RED);
-        vTaskDelay(600 / portTICK_RATE_MS);
-
-        LOG("fill GREEN");
-        fill_screen(COLOR_GREEN);
-        vTaskDelay(600 / portTICK_RATE_MS);
-
-        LOG("fill BLUE");
-        fill_screen(COLOR_BLUE);
-        vTaskDelay(600 / portTICK_RATE_MS);
+        vTaskDelay(1000 / portTICK_RATE_MS);
     }
 }
-
-#endif // !GC9A01_ENABLE_HSPI
