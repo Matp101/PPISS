@@ -95,6 +95,26 @@ enum {
 #define MADCTL_BGR 0x08
 #define MADCTL_MH  0x04
 
+/* -------------------- Display rotation -------------------- */
+/*
+ * Set DISPLAY_ROTATION to 0, 90, 180, or 270.
+ */
+#ifndef DISPLAY_ROTATION
+#define DISPLAY_ROTATION 180
+#endif
+
+#if   DISPLAY_ROTATION == 0
+#define MADCTL_ROTATION (MADCTL_MX | MADCTL_BGR)
+#elif DISPLAY_ROTATION == 90
+#define MADCTL_ROTATION (MADCTL_MV | MADCTL_MX | MADCTL_BGR)
+#elif DISPLAY_ROTATION == 180
+#define MADCTL_ROTATION (MADCTL_MY | MADCTL_BGR)
+#elif DISPLAY_ROTATION == 270
+#define MADCTL_ROTATION (MADCTL_MV | MADCTL_MY | MADCTL_BGR)
+#else
+#error "DISPLAY_ROTATION must be 0, 90, 180, or 270"
+#endif
+
 /* -------------------- RGB565 colour constants -------------------- */
 #define COLOR_BLACK       0x0000
 #define COLOR_NAVY        0x000F
