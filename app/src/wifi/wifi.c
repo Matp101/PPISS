@@ -22,6 +22,8 @@
 #define WIFI_PASS "YourPassword"
 #endif
 
+#define LOG(fmt, ...) os_printf("[WIFI] " fmt "\r\n", ##__VA_ARGS__)
+
 static void wifi_start_station(void)
 {
     struct station_config cfg;
@@ -52,21 +54,21 @@ void wifi_task(void *arg)
             if (!printed_connected) {
                 struct station_config sc;
                 wifi_station_get_config(&sc);
-                os_printf("WiFi: connected to SSID: %s\r\n", sc.ssid);
+                LOG("Connected to SSID: %s", sc.ssid);
                 printed_connected = 1;
             }
             if (!printed_ip) {
                 struct ip_info info;
                 wifi_get_ip_info(STATION_IF, &info);
                 uint32_t a = info.ip.addr;
-                os_printf("WiFi: IP %u.%u.%u.%u\r\n",
-                       (a >> 0) & 0xFF, (a >> 8) & 0xFF, (a >> 16) & 0xFF, (a >> 24) & 0xFF);
+                LOG("IP %u.%u.%u.%u",
+                    (a >> 0) & 0xFF, (a >> 8) & 0xFF, (a >> 16) & 0xFF, (a >> 24) & 0xFF);
                 printed_ip = 1;
             }
         } else if (st == STATION_WRONG_PASSWORD ||
                    st == STATION_NO_AP_FOUND  ||
                    st == STATION_CONNECT_FAIL) {
-            os_printf("WiFi: status %d, retrying...\r\n", (int)st);
+            LOG("Status %d, retrying...", (int)st);
             wifi_station_disconnect();
             vTaskDelay(1000 / portTICK_RATE_MS);
             wifi_station_connect();
