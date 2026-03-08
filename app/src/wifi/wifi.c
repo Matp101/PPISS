@@ -1,5 +1,10 @@
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
+/*
+ * WiFi station mode — connects to the configured AP and maintains
+ * the wifi_connected flag for use by other tasks.
+ */
+
+#include "wifi.h"
+#include "../secrets.h"
 
 #include "lwip/ip_addr.h"
 #include "lwip/inet.h"
@@ -12,8 +17,6 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "../secrets.h"
-
 #ifndef WIFI_SSID
 #define WIFI_SSID "YourSSID"
 #endif
@@ -23,6 +26,8 @@
 #endif
 
 #define LOG(fmt, ...) os_printf("[WIFI] " fmt "\r\n", ##__VA_ARGS__)
+
+volatile bool wifi_connected = false;
 
 static void wifi_start_station(void)
 {
@@ -51,6 +56,7 @@ void wifi_task(void *arg)
         STATION_STATUS st = wifi_station_get_connect_status();
 
         if (st == STATION_GOT_IP) {
+            wifi_connected = true;
             if (!printed_connected) {
                 struct station_config sc;
                 wifi_station_get_config(&sc);
@@ -68,6 +74,7 @@ void wifi_task(void *arg)
         } else if (st == STATION_WRONG_PASSWORD ||
                    st == STATION_NO_AP_FOUND  ||
                    st == STATION_CONNECT_FAIL) {
+            wifi_connected = false;
             LOG("Status %d, retrying...", (int)st);
             wifi_station_disconnect();
             vTaskDelay(1000 / portTICK_RATE_MS);
@@ -78,6 +85,7 @@ void wifi_task(void *arg)
             /* still working */
         } else {
             /* any other state -> try to reconnect */
+            wifi_connected = false;
             wifi_station_connect();
             printed_connected = 0;
             printed_ip = 0;
