@@ -3,7 +3,7 @@
  *
  * Wiring (Wemos D1 mini):
  *   CS   -> D8  (GPIO15)
- *   DC   -> D2  (GPIO4)
+ *   DC   -> D3  (GPIO0)
  *   MOSI -> D7  (GPIO13)
  *   SCLK -> D5  (GPIO14)
  *   RST  -> NC  (software reset)

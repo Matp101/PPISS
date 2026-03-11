@@ -33,7 +33,7 @@ enum {
 /* -------------------- Pin selection -------------------- */
 enum {
     PIN_CS   = 15,  /* D8 */
-    PIN_DC   = 4,   /* D2 */
+    PIN_DC   = 0,   /* D3 */
     PIN_MOSI = 13,  /* D7 */
     PIN_SCLK = 14,  /* D5 */
 };
@@ -100,7 +100,7 @@ enum {
  * Set DISPLAY_ROTATION to 0, 90, 180, or 270.
  */
 #ifndef DISPLAY_ROTATION
-#define DISPLAY_ROTATION 180
+#define DISPLAY_ROTATION 0
 #endif
 
 #if   DISPLAY_ROTATION == 0
