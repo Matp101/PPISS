@@ -1,0 +1,2 @@
+# Force LF line endings for all text files (needed for Nix/WSL compatibility)
+* text=auto eol=lf
