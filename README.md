@@ -100,9 +100,6 @@ The `models/` folder contains the 3D-printable enclosure:
 
 If you're on NixOS or have Nix with flakes enabled, you can build and develop without installing PlatformIO globally.
 
-> **Prerequisites:** [Nix](https://nixos.org/download/) with `nix-command` and `flakes` enabled.
-> Add `experimental-features = nix-command flakes` to `~/.config/nix/nix.conf` if you haven't already.
-
 **Build the firmware:**
 ```bash
 nix run .
@@ -129,12 +126,6 @@ pio run
 pio run -t upload
 pio device monitor
 ```
-
-> **Note:** On NixOS, you may need to add udev rules for USB upload access:
-> ```nix
-> services.udev.packages = [ pkgs.platformio-core pkgs.openocd ];
-> ```
-> Or add your user to the `dialout` group.
 
 ## Telemetry Items
 
